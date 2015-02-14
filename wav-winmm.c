@@ -384,6 +384,8 @@ MCIERROR WINAPI fake_mciSendCommandA(MCIDEVICEID IDDevice, UINT uMsg, DWORD_PTR 
         if (uMsg == MCI_STOP)
         {
             dprintf("  MCI_STOP\r\n");
+            plr_stop();
+            
             playing = 0;
         }
 
