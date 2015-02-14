@@ -77,7 +77,10 @@ int player_main(struct play_info *info)
             }
         }
 
-        current++;
+        if (current == last) //HACK for JK - loop level music playlist to fix game bug 
+            current = first; //(therefore this is bad as a general solution for any other game)
+        else
+            current++;
     }
 
     playing = 0;
@@ -169,7 +172,7 @@ MCIERROR WINAPI fake_mciSendCommandA(MCIDEVICEID IDDevice, UINT uMsg, DWORD_PTR 
 
     if (uMsg == MCI_OPEN)
     {
-        LPMCI_OPEN_PARMS parms = (LPVOID)dwParam;
+        LPMCI_OPEN_PARMS parms = (LPMCI_OPEN_PARMS)dwParam;
 
         dprintf("  MCI_OPEN\r\n");
 
@@ -214,7 +217,7 @@ MCIERROR WINAPI fake_mciSendCommandA(MCIDEVICEID IDDevice, UINT uMsg, DWORD_PTR 
     {
         if (uMsg == MCI_SET)
         {
-            LPMCI_SET_PARMS parms = (LPVOID)dwParam;
+            LPMCI_SET_PARMS parms = (LPMCI_SET_PARMS)dwParam;
 
             dprintf("  MCI_SET\r\n");
 
@@ -276,7 +279,7 @@ MCIERROR WINAPI fake_mciSendCommandA(MCIDEVICEID IDDevice, UINT uMsg, DWORD_PTR 
 
         if (uMsg == MCI_PLAY)
         {
-            LPMCI_PLAY_PARMS parms = (LPVOID)dwParam;
+            LPMCI_PLAY_PARMS parms = (LPMCI_PLAY_PARMS)dwParam;
             static struct play_info info = { -1, -1 };
 
             dprintf("  MCI_PLAY\r\n");
@@ -327,6 +330,8 @@ MCIERROR WINAPI fake_mciSendCommandA(MCIDEVICEID IDDevice, UINT uMsg, DWORD_PTR 
 
             if (fdwCommand & MCI_TO)
             {
+                parms->dwTo--; //HACK for Jedi Knight; dwTo should be non-inclusive
+                
                 dprintf("    dwTo:   %d\r\n", parms->dwTo);
 
                 if (time_format == MCI_FORMAT_TMSF)
@@ -384,7 +389,7 @@ MCIERROR WINAPI fake_mciSendCommandA(MCIDEVICEID IDDevice, UINT uMsg, DWORD_PTR 
 
         if (uMsg == MCI_STATUS)
         {
-            LPMCI_STATUS_PARMS parms = (LPVOID)dwParam;
+            LPMCI_STATUS_PARMS parms = (LPMCI_STATUS_PARMS)dwParam;
 
             dprintf("  MCI_STATUS\r\n");
 
@@ -507,6 +512,7 @@ MCIERROR WINAPI fake_mciSendStringA(LPCTSTR cmd, LPTSTR ret, UINT cchReturn, HAN
     int from = -1, to = -1;
     if (sscanf(cmd, "play cd from %d to %d", &from, &to) == 2)
     {
+        to--;
         static MCI_PLAY_PARMS parms;
         parms.dwFrom = from;
         parms.dwTo = to;
