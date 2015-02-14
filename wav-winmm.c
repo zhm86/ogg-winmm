@@ -78,7 +78,7 @@ int player_main(struct play_info *info)
         }
 
         if (current == last) //HACK for JK - loop level music playlist to fix game bug 
-            current = first; //(therefore this is bad as a general solution for any other game)
+            current = info->first; //(therefore this is bad as a general solution for any other game
         else
             current++;
     }
@@ -371,13 +371,16 @@ MCIERROR WINAPI fake_mciSendCommandA(MCIDEVICEID IDDevice, UINT uMsg, DWORD_PTR 
 
             if (info.first && (fdwCommand & MCI_FROM))
             {
-                if (player)
+                if (!playing) //HACK for JK; don't always restart music during music change, this allows updating of music playlist
                 {
-                    TerminateThread(player, 0);
-                }
+                    if (player)
+                    {
+                        TerminateThread(player, 0);
+                    }
 
-                playing = 0;
-                player = CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)player_main, (void *)&info, 0, NULL);
+                    playing = 0;
+                    player = CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)player_main, (void *)&info, 0, NULL);
+                }
             }
         }
 
@@ -462,9 +465,20 @@ MCIERROR WINAPI fake_mciSendCommandA(MCIDEVICEID IDDevice, UINT uMsg, DWORD_PTR 
                 if (parms->dwItem == MCI_STATUS_MODE)
                 {
                     dprintf("      MCI_STATUS_MODE\r\n");
-                    dprintf("        we are %s\r\n", playing ? "playing" : "NOT playing");
+                    dprintf("        we are %s\r\n", playing ? "playing but reporting not" : "NOT playing");
 
-                    parms->dwReturn = playing ? MCI_MODE_PLAY : MCI_MODE_STOP;
+                    
+                    //Hack for JK - always return "not playing" to force new music to queue
+                    //This is because Jedi Knight checks if the music is done playing to restart
+                    //the music, but sometimes it needs to restart at a different track than before.
+                    //Only problem is, it only checks when returning from ESC menu or of the player has
+                    //been standing still for a while, which are not very common intervals.
+                    //So now, the new first track can update even while music is playing. 
+                    //Ideally, it will have checked before the music is finished playing.
+                    //It's a long interval so does not result in many redundant checks (only 5-10 extra per level)
+                    parms->dwReturn = MCI_MODE_STOP; 
+                    
+                    //parms->dwReturn = playing ? MCI_MODE_PLAY : MCI_MODE_STOP;
                 }
 
                 if (parms->dwItem == MCI_STATUS_READY)
@@ -514,7 +528,6 @@ MCIERROR WINAPI fake_mciSendStringA(LPCTSTR cmd, LPTSTR ret, UINT cchReturn, HAN
     int from = -1, to = -1;
     if (sscanf(cmd, "play cd from %d to %d", &from, &to) == 2)
     {
-        to--;
         static MCI_PLAY_PARMS parms;
         parms.dwFrom = from;
         parms.dwTo = to;
