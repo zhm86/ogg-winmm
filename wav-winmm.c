@@ -52,6 +52,7 @@ int numTracks = 0;
 char music_path[2048];
 int time_format = MCI_FORMAT_TMSF;
 CRITICAL_SECTION cs;
+HINSTANCE realWinmmDLL = 0;
 
 int player_main(struct play_info *info)
 {
@@ -88,6 +89,17 @@ BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
 {
     if (fdwReason == DLL_PROCESS_ATTACH)
     {
+		//load real winmm.dll
+		char winmm_path[MAX_PATH];
+		
+		GetSystemDirectory(winmm_path, MAX_PATH);
+		strncat(winmm_path, "\\winmm.dll", MAX_PATH);
+		
+		realWinmmDLL = LoadLibrary(winmm_path);
+		if (!realWinmmDLL) return FALSE;
+		
+		setWinmmDll(realWinmmDLL);
+		
 #ifdef _DEBUG
         fh = fopen("winmm.txt", "w");
 #endif
@@ -140,6 +152,8 @@ BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
 #ifdef _DEBUG
     if (fdwReason == DLL_PROCESS_DETACH)
     {
+		FreeLibrary(realWinmmDLL);
+		
         if (fh)
         {
             fclose(fh);
@@ -327,7 +341,7 @@ MCIERROR WINAPI fake_mciSendCommandA(MCIDEVICEID IDDevice, UINT uMsg, DWORD_PTR 
 
             if (fdwCommand & MCI_TO)
             {
-                parms->dwTo--; //HACK for Jedi Knight; dwTo should be non-inclusive
+                parms->dwTo--; //dwTo should be non-inclusive
                 
                 dprintf("    dwTo:   %d\r\n", parms->dwTo);
 
@@ -505,7 +519,7 @@ MCIERROR WINAPI fake_mciSendStringA(LPCTSTR cmd, LPTSTR ret, UINT cchReturn, HAN
 
     if (strstr(cmd, "stop cd"))
     {
-        fake_mciSendCommandA(MAGIC_DEVICEID, MCI_STOP, 0, NULL);
+        fake_mciSendCommandA(MAGIC_DEVICEID, MCI_STOP, 0, (DWORD_PTR)NULL);
         return 0;
     }
 
@@ -515,7 +529,7 @@ MCIERROR WINAPI fake_mciSendStringA(LPCTSTR cmd, LPTSTR ret, UINT cchReturn, HAN
         static MCI_PLAY_PARMS parms;
         parms.dwFrom = from;
         parms.dwTo = to;
-        fake_mciSendCommandA(MAGIC_DEVICEID, MCI_PLAY, MCI_FROM|MCI_TO, &parms);
+        fake_mciSendCommandA(MAGIC_DEVICEID, MCI_PLAY, MCI_FROM|MCI_TO, (DWORD_PTR)&parms);
         return 0;
     }
 
