@@ -1,7 +1,7 @@
 # ogg-winmm CD Audio Emulator
 
 This project (originally by Hifi) uses .ogg music files on the disk
-to emulate CD tracks, replacing the need ot have a CD in the drive
+to emulate CD tracks, replacing the need otohave a CD in the drive
 to play music in certain games. Good Old Games uses a modified version
 for several of their games. 
 
