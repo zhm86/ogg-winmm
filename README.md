@@ -1,14 +1,16 @@
 # ogg-winmm CD Audio Emulator
 
 This project (originally by Hifi) uses .ogg music files on the disk
-to emulate CD tracks, replacing the need ot have a CD in the drive
+to emulate CD tracks, replacing the need otohave a CD in the drive
 to play music in certain games. Good Old Games uses a modified version
-for several of their games.
+for several of their games. 
 
 It has gone unmaintained, so I took it upon myself to solve a couple issues,
-namely making it work on Windows 10.
+namely making it work on Windows 10. Good Old Games has fixed their own version,
+but it's not as useful without the source available, so I fixed it myself as well.
 
 BUILDING:
+
 By default the makefile looks in a "libs\include" subdirectory for 
 "ogg" and "vorbis" dependencies.
 
@@ -16,6 +18,7 @@ Run "make" in the folder to build winmm.dll. Copy it into the same folder
 as the executable of the game you want to emulate CD music for.
 
 USAGE:
+
 Copy "winmm.dll" into the same folder as the executable of the game you want 
 to emulate CD music for.
 
