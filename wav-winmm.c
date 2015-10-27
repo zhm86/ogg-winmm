@@ -1,18 +1,18 @@
 /*
- * Copyright (c) 2012 Toni Spets <toni.spets@iki.fi>
- *
- * Permission to use, copy, modify, and distribute this software for any
- * purpose with or without fee is hereby granted, provided that the above
- * copyright notice and this permission notice appear in all copies.
- *
- * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
- * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
- * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
- * ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
- * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
- * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
- * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
- */
+* Copyright (c) 2012 Toni Spets <toni.spets@iki.fi>
+*
+* Permission to use, copy, modify, and distribute this software for any
+* purpose with or without fee is hereby granted, provided that the above
+* copyright notice and this permission notice appear in all copies.
+*
+* THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
+* WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
+* MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
+* ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
+* WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
+* ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
+* OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+*/
 
 #include <windows.h>
 #include <stdio.h>
@@ -21,6 +21,12 @@
 
 #define MAGIC_DEVICEID 0xBEEF
 #define MAX_TRACKS 99
+
+#ifdef WIN32
+
+#define snprintf _snprintf
+
+#endif
 
 struct track_info
 {
@@ -38,13 +44,15 @@ struct play_info
 };
 
 #ifdef _DEBUG
-    #define dprintf(...) if (fh) { fprintf(fh, __VA_ARGS__); fflush(NULL); }
-    FILE *fh = NULL;
+#define dprintf(...) if (fh) { fprintf(fh, __VA_ARGS__); fflush(NULL); }
+FILE *fh = NULL;
 #else
-    #define dprintf(...)
+#define dprintf(...)
 #endif
 
 int playing = 0;
+int updateTrack = 0;
+int closed = 0;
 HANDLE player = NULL;
 int firstTrack = -1;
 int lastTrack = 0;
@@ -52,34 +60,60 @@ int numTracks = 0;
 char music_path[2048];
 int time_format = MCI_FORMAT_TMSF;
 CRITICAL_SECTION cs;
-HINSTANCE realWinmmDLL = 0;
+static struct play_info info = { -1, -1 };
 
-int player_main(struct play_info *info)
+int player_main()
 {
-    int first = info->first;
-    int last = info->last;
-    int current = first;
+    int first;
+    int last;
+    int current;
 
-    playing = 1;
-
-    while (current <= last && playing)
+    while (!closed)
     {
-        dprintf("Next track: %s\r\n", tracks[current].path);
-        playing = plr_play(tracks[current].path);
+        //set track info
+        if (updateTrack)
+        {
+            first = info.first;
+            last = info.last;
+            current = first;
+            updateTrack = 0;
+        }
+
+        //stop if at end of 'playlist'
+        //note "last" track is NON-inclusive
+        if (current == last)
+            playing = 0;
+
+        //try to play song
+        else
+        {
+            dprintf("Next track: %s\r\n", tracks[current].path);
+            playing = plr_play(tracks[current].path);
+        }
 
         while (1)
         {
-            if (plr_pump() == 0)
+            //check control signals
+
+            if (closed) //MCI_CLOSE
+                break;
+            
+            if (!playing) //MCI_STOP
+            {
+                plr_stop(); //end playback
+                SuspendThread(player); //pause thread until next MCI_PLAY
+            }
+
+            if (plr_pump() == 0) //done playing song
                 break;
 
-            if (!playing)
-            {
-                return 0;
-            }
+            if (updateTrack) //MCI_PLAY
+                break;
         }
 
         current++;
     }
+    plr_stop();
 
     playing = 0;
     return 0;
@@ -89,17 +123,6 @@ BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
 {
     if (fdwReason == DLL_PROCESS_ATTACH)
     {
-		//load real winmm.dll
-		char winmm_path[MAX_PATH];
-		
-		GetSystemDirectory(winmm_path, MAX_PATH);
-		strncat(winmm_path, "\\winmm.dll", MAX_PATH);
-		
-		realWinmmDLL = LoadLibrary(winmm_path);
-		if (!realWinmmDLL) return FALSE;
-		
-		setWinmmDll(realWinmmDLL);
-		
 #ifdef _DEBUG
         fh = fopen("winmm.txt", "w");
 #endif
@@ -152,8 +175,6 @@ BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
 #ifdef _DEBUG
     if (fdwReason == DLL_PROCESS_DETACH)
     {
-		FreeLibrary(realWinmmDLL);
-		
         if (fh)
         {
             fclose(fh);
@@ -183,7 +204,7 @@ MCIERROR WINAPI fake_mciSendCommandA(MCIDEVICEID IDDevice, UINT uMsg, DWORD_PTR 
 
     if (uMsg == MCI_OPEN)
     {
-        LPMCI_OPEN_PARMS parms = (LPMCI_OPEN_PARMS)dwParam;
+        LPMCI_OPEN_PARMS parms = (LPVOID)dwParam;
 
         dprintf("  MCI_OPEN\r\n");
 
@@ -228,7 +249,7 @@ MCIERROR WINAPI fake_mciSendCommandA(MCIDEVICEID IDDevice, UINT uMsg, DWORD_PTR 
     {
         if (uMsg == MCI_SET)
         {
-            LPMCI_SET_PARMS parms = (LPMCI_SET_PARMS)dwParam;
+            LPMCI_SET_PARMS parms = (LPVOID)dwParam;
 
             dprintf("  MCI_SET\r\n");
 
@@ -281,7 +302,9 @@ MCIERROR WINAPI fake_mciSendCommandA(MCIDEVICEID IDDevice, UINT uMsg, DWORD_PTR 
 
             if (player)
             {
-                TerminateThread(player, 0);
+                ResumeThread(player); //just in case it's suspended, else deadlock
+                closed = 1;
+                playing = 0;
             }
 
             playing = 0;
@@ -290,8 +313,7 @@ MCIERROR WINAPI fake_mciSendCommandA(MCIDEVICEID IDDevice, UINT uMsg, DWORD_PTR 
 
         if (uMsg == MCI_PLAY)
         {
-            LPMCI_PLAY_PARMS parms = (LPMCI_PLAY_PARMS)dwParam;
-            static struct play_info info = { -1, -1 };
+            LPMCI_PLAY_PARMS parms = (LPVOID)dwParam;
 
             dprintf("  MCI_PLAY\r\n");
 
@@ -341,8 +363,6 @@ MCIERROR WINAPI fake_mciSendCommandA(MCIDEVICEID IDDevice, UINT uMsg, DWORD_PTR 
 
             if (fdwCommand & MCI_TO)
             {
-                parms->dwTo--; //dwTo should be non-inclusive
-                
                 dprintf("    dwTo:   %d\r\n", parms->dwTo);
 
                 if (time_format == MCI_FORMAT_TMSF)
@@ -358,7 +378,7 @@ MCIERROR WINAPI fake_mciSendCommandA(MCIDEVICEID IDDevice, UINT uMsg, DWORD_PTR 
                 {
                     info.last = info.first;
 
-                    for (int i = info.first; i < MAX_TRACKS; i ++)
+                    for (int i = info.first; i < MAX_TRACKS; i++)
                     {
                         // FIXME: use better matching
                         if (tracks[i].position + tracks[i].length > parms->dwFrom / 1000)
@@ -382,28 +402,26 @@ MCIERROR WINAPI fake_mciSendCommandA(MCIDEVICEID IDDevice, UINT uMsg, DWORD_PTR 
 
             if (info.first && (fdwCommand & MCI_FROM))
             {
+                updateTrack = 1;
+                playing = 1;
 
-                if (player)
-                {
-                    TerminateThread(player, 0);
-                }
-
-                playing = 0;
-                player = CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)player_main, (void *)&info, 0, NULL);
+                //track info is now a global variable for live updating
+                if (player == NULL)
+                    player = CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)player_main, NULL, 0, NULL);
+                else
+                    ResumeThread(player);       
             }
         }
 
         if (uMsg == MCI_STOP)
         {
             dprintf("  MCI_STOP\r\n");
-            plr_stop();
-            
             playing = 0;
         }
 
         if (uMsg == MCI_STATUS)
         {
-            LPMCI_STATUS_PARMS parms = (LPMCI_STATUS_PARMS)dwParam;
+            LPMCI_STATUS_PARMS parms = (LPVOID)dwParam;
 
             dprintf("  MCI_STATUS\r\n");
 
@@ -474,7 +492,7 @@ MCIERROR WINAPI fake_mciSendCommandA(MCIDEVICEID IDDevice, UINT uMsg, DWORD_PTR 
                 if (parms->dwItem == MCI_STATUS_MODE)
                 {
                     dprintf("      MCI_STATUS_MODE\r\n");
-                    dprintf("        we are %s\r\n", playing ? "playing but reporting not" : "NOT playing");
+                    dprintf("        we are %s\r\n", playing ? "playing" : "NOT playing");
 
                     parms->dwReturn = playing ? MCI_MODE_PLAY : MCI_MODE_STOP;
                 }
@@ -529,7 +547,7 @@ MCIERROR WINAPI fake_mciSendStringA(LPCTSTR cmd, LPTSTR ret, UINT cchReturn, HAN
         static MCI_PLAY_PARMS parms;
         parms.dwFrom = from;
         parms.dwTo = to;
-        fake_mciSendCommandA(MAGIC_DEVICEID, MCI_PLAY, MCI_FROM|MCI_TO, (DWORD_PTR)&parms);
+        fake_mciSendCommandA(MAGIC_DEVICEID, MCI_PLAY, MCI_FROM | MCI_TO, (DWORD_PTR)&parms);
         return 0;
     }
 
