@@ -1,17 +1,21 @@
 LIBRARY winmm.dll
 
 EXPORTS
-    auxGetDevCapsA                   = fake_auxGetDevCapsA
-    auxGetDevCapsW                   = fake_auxGetDevCapsW
-    auxGetNumDevs                    = fake_auxGetNumDevs
     auxGetVolume                     = fake_auxGetVolume
-    auxOutMessage                    = fake_auxOutMessage
     auxSetVolume                     = fake_auxSetVolume
+    auxGetDevCapsA                   = fake_auxGetDevCapsA
+    auxGetNumDevs                    = fake_auxGetNumDevs
+    mciSendCommandA                  = fake_mciSendCommandA
+    mciSendStringA                   = fake_mciSendStringA
+    
+    auxGetDevCapsW                   = fake_auxGetDevCapsW
+    auxOutMessage                    = fake_auxOutMessage
     CloseDriver                      = fake_CloseDriver
     DefDriverProc                    = fake_DefDriverProc
     DriverCallback                   = fake_DriverCallback
     DrvGetModuleHandle               = fake_DrvGetModuleHandle
     GetDriverModuleHandle            = fake_GetDriverModuleHandle
+    joyConfigChanged                 = fake_joyConfigChanged
     joyGetDevCapsA                   = fake_joyGetDevCapsA
     joyGetDevCapsW                   = fake_joyGetDevCapsW
     joyGetNumDevs                    = fake_joyGetNumDevs
@@ -22,6 +26,7 @@ EXPORTS
     joySetCapture                    = fake_joySetCapture
     joySetThreshold                  = fake_joySetThreshold
     mciExecute                       = fake_mciExecute
+    mciFreeCommandResource           = fake_mciFreeCommandResource
     mciGetCreatorTask                = fake_mciGetCreatorTask
     mciGetDeviceIDA                  = fake_mciGetDeviceIDA
     mciGetDeviceIDFromElementIDA     = fake_mciGetDeviceIDFromElementIDA
@@ -30,9 +35,8 @@ EXPORTS
     mciGetErrorStringA               = fake_mciGetErrorStringA
     mciGetErrorStringW               = fake_mciGetErrorStringW
     mciGetYieldProc                  = fake_mciGetYieldProc
-    mciSendCommandA                  = fake_mciSendCommandA
+    mciLoadCommandResource           = fake_mciLoadCommandResource
     mciSendCommandW                  = fake_mciSendCommandW
-    mciSendStringA                   = fake_mciSendStringA
     mciSendStringW                   = fake_mciSendStringW
     mciSetYieldProc                  = fake_mciSetYieldProc
     midiConnect                      = fake_midiConnect
@@ -92,6 +96,11 @@ EXPORTS
     mixerMessage                     = fake_mixerMessage
     mixerOpen                        = fake_mixerOpen
     mixerSetControlDetails           = fake_mixerSetControlDetails
+    mmGetCurrentTask                 = fake_mmGetCurrentTask
+    mmTaskBlock                      = fake_mmTaskBlock
+    mmTaskCreate                     = fake_mmTaskCreate
+    mmTaskSignal                     = fake_mmTaskSignal
+    mmTaskYield                      = fake_mmTaskYield
     mmioAdvance                      = fake_mmioAdvance
     mmioAscend                       = fake_mmioAscend
     mmioClose                        = fake_mmioClose

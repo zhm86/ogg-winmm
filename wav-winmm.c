@@ -541,28 +541,28 @@ MCIERROR WINAPI fake_mciSendStringA(LPCTSTR cmd, LPTSTR ret, UINT cchReturn, HAN
         return 0;
     }
 
-	if (strstr(cmd, "set cd time format") || strstr(cmd, "set cdaudio time format"))
-	{
-		static MCI_SET_PARMS parms;
-		if (strstr(cmd, "tmsf"))
-			parms.dwTimeFormat = MCI_FORMAT_TMSF;
-		else if (strstr(cmd, "msf"))
-			parms.dwTimeFormat = MCI_FORMAT_MSF;
-		else if (strstr(cmd, "milliseconds"))
-			parms.dwTimeFormat = MCI_FORMAT_MILLISECONDS;
+    if (strstr(cmd, "set cd time format") || strstr(cmd, "set cdaudio time format"))
+    {
+        static MCI_SET_PARMS parms;
+        if (strstr(cmd, "tmsf"))
+            parms.dwTimeFormat = MCI_FORMAT_TMSF;
+        else if (strstr(cmd, "msf"))
+            parms.dwTimeFormat = MCI_FORMAT_MSF;
+        else if (strstr(cmd, "milliseconds"))
+            parms.dwTimeFormat = MCI_FORMAT_MILLISECONDS;
 
-		fake_mciSendCommandA(MAGIC_DEVICEID, MCI_SET, MCI_SET_TIME_FORMAT, (DWORD_PTR)&parms);
-		return 0;
-	}
+        fake_mciSendCommandA(MAGIC_DEVICEID, MCI_SET, MCI_SET_TIME_FORMAT, (DWORD_PTR)&parms);
+        return 0;
+    }
 
-	if (strstr(cmd, "status cd number of tracks") || strstr(cmd, "status cdaudio number of tracks"))
-	{
-		_itoa(numTracks, ret, 10);
-		return 0;
-	}
+    if (strstr(cmd, "status cd number of tracks") || strstr(cmd, "status cdaudio number of tracks"))
+    {
+        _itoa(numTracks, ret, 10);
+        return 0;
+    }
 
     int from = -1, to = -1;
-	if (sscanf(cmd, "play cd from %d to %d", &from, &to) == 2 || sscanf(cmd, "play cdaudio from %d to %d", &from, &to) == 2)
+    if (sscanf(cmd, "play cd from %d to %d", &from, &to) == 2 || sscanf(cmd, "play cdaudio from %d to %d", &from, &to) == 2)
     {
         static MCI_PLAY_PARMS parms;
         parms.dwFrom = from;
@@ -571,13 +571,13 @@ MCIERROR WINAPI fake_mciSendStringA(LPCTSTR cmd, LPTSTR ret, UINT cchReturn, HAN
         return 0;
     }
 
-	if (sscanf(cmd, "play cd from %d", &from) == 1 || sscanf(cmd, "play cdaudio from %d", &from) == 1)
-	{
-		static MCI_PLAY_PARMS parms;
-		parms.dwFrom = from;
-		fake_mciSendCommandA(MAGIC_DEVICEID, MCI_PLAY, MCI_FROM, (DWORD_PTR)&parms);
-		return 0;
-	}
+    if (sscanf(cmd, "play cd from %d", &from) == 1 || sscanf(cmd, "play cdaudio from %d", &from) == 1)
+    {
+        static MCI_PLAY_PARMS parms;
+        parms.dwFrom = from;
+        fake_mciSendCommandA(MAGIC_DEVICEID, MCI_PLAY, MCI_FROM, (DWORD_PTR)&parms);
+        return 0;
+    }
 
     return 0;
 }

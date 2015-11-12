@@ -1328,3 +1328,68 @@ BOOL WINAPI fake_NotifyCallbackData(DWORD a0, DWORD a1, DWORD a2, DWORD a3, DWOR
     return (*funcp)(a0, a1, a2, a3, a4);
 }
 
+MMRESULT WINAPI fake_joyConfigChanged(DWORD a0)
+{
+    static MMRESULT (WINAPI *funcp)(DWORD a0) = NULL;
+    if (funcp == NULL)
+        funcp = (void*)GetProcAddress(loadRealDLL(), "joyConfigChanged");
+    return (*funcp)(a0);
+}
+
+BOOL WINAPI fake_mciFreeCommandResource(UINT a0)
+{
+    static BOOL (WINAPI *funcp)(UINT a0) = NULL;
+    if (funcp == NULL)
+        funcp = (void*)GetProcAddress(loadRealDLL(), "mciFreeCommandResource");
+    return (*funcp)(a0);
+}
+
+UINT WINAPI fake_mciLoadCommandResource(HANDLE a0, LPCWSTR a1, UINT a2)
+{
+    static UINT (WINAPI *funcp)(HANDLE a0, LPCWSTR a1, UINT a2) = NULL;
+    if (funcp == NULL)
+        funcp = (void*)GetProcAddress(loadRealDLL(), "mciLoadCommandResource");
+    return (*funcp)(a0, a1, a2);
+}
+
+DWORD WINAPI fake_mmGetCurrentTask()
+{
+    static DWORD (WINAPI *funcp)() = NULL;
+    if (funcp == NULL)
+        funcp = (void*)GetProcAddress(loadRealDLL(), "mmGetCurrentTask");
+    return (*funcp)();
+}
+
+void WINAPI fake_mmTaskBlock(DWORD a0)
+{
+    static void (WINAPI *funcp)(DWORD a0) = NULL;
+    if (funcp == NULL)
+        funcp = (void*)GetProcAddress(loadRealDLL(), "mmTaskBlock");
+    return (*funcp)(a0);
+}
+
+typedef VOID (*LPTASKCALLBACK)(DWORD dwInst);
+
+UINT WINAPI fake_mmTaskCreate(LPTASKCALLBACK a0, HANDLE* a1, DWORD_PTR a2)
+{
+    static UINT (WINAPI *funcp)(LPTASKCALLBACK a0, HANDLE* a1, DWORD_PTR a2) = NULL;
+    if (funcp == NULL)
+        funcp = (void*)GetProcAddress(loadRealDLL(), "mmTaskCreate");
+    return (*funcp)(a0, a1, a2);
+}
+
+BOOL WINAPI fake_mmTaskSignal(DWORD a0)
+{
+    static BOOL (WINAPI *funcp)(DWORD a0) = NULL;
+    if (funcp == NULL)
+        funcp = (void*)GetProcAddress(loadRealDLL(), "mmTaskSignal");
+    return (*funcp)(a0);
+}
+
+void WINAPI fake_mmTaskYield()
+{
+    static void (WINAPI *funcp)() = NULL;
+    if (funcp == NULL)
+        funcp = (void*)GetProcAddress(loadRealDLL(), "mmTaskYield");
+    return (*funcp)();
+}
