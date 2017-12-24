@@ -1,21 +1,27 @@
 # ogg-winmm CD Audio Emulator
 
 This project (originally by Hifi) uses .ogg music files on the disk
-to emulate CD tracks, replacing the need otohave a CD in the drive
+to emulate CD tracks, replacing the need to have a CD in the drive
 to play music in certain games. Good Old Games uses a modified version
 for several of their games. 
 
-It has gone unmaintained, so I took it upon myself to solve a couple issues,
+It has gone unmaintained, so I (bangstk) took it upon myself to solve a couple issues,
 namely making it work on Windows 10. Good Old Games has fixed their own version,
 but it's not as useful without the source available, so I fixed it myself as well.
 
+I (The Uploader) could not build it with MSYS, and I needed to fix a particular game
+(Wipeout 2097), so I took the sources and made it build with MSVC 14.1 through VS 2017.
+
+If you need this fork for another game, remove the specific Wipeout 2097 fix first
+in mciSendCommandA.
+
 BUILDING:
 
-By default the makefile looks in a "libs\include" subdirectory for 
-"ogg" and "vorbis" dependencies.
+Open winmmOgg.sln with Visual Studio 2015 or 2017.
 
-Run "make" in the folder to build winmm.dll. Copy it into the same folder
-as the executable of the game you want to emulate CD music for.
+Run Build -> Build Solution (or Ctrl-Shift-B).
+
+You need to have the Windows 8.1 SDK and headers installed for the build to succeed.
 
 USAGE:
 
