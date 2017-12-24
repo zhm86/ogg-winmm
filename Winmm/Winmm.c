@@ -44,6 +44,10 @@ struct play_info
     int last;
 };
 
+#ifndef _DEBUG
+#define _DEBUG 1
+#endif
+
 #ifdef _DEBUG
 #define dprintf(...) if (fh) { fprintf(fh, __VA_ARGS__); fflush(NULL); }
 FILE *fh = NULL;
@@ -72,7 +76,6 @@ int player_main()
     while (!closed)
     {
 		
-		dprintf("player_main while !closed\r\n");
         //set track info
         if (updateTrack)
         {
@@ -80,14 +83,12 @@ int player_main()
             last = info.last;
             current = first;
             updateTrack = 0;
-			dprintf("  Track updated : %d %d %d\r\n", first, last, current);
         }
 
         //stop if at end of 'playlist'
         //note "last" track is NON-inclusive
 		if (current == last)
 		{
-			dprintf("  current = last, stopped at end of playlist\r\n");
 			playing = 0;
 		}
         //try to play song
@@ -100,39 +101,31 @@ int player_main()
         while (1)
         {
             //check control signals
-			dprintf("  player_main : checking control signals...\r\n");
 			if (closed) //MCI_CLOSE
 			{
-				dprintf("    player_main : ... MCI_CLOSE\r\n");
 				break;
 			}
             
             if (!playing) //MCI_STOP
             {
 
-				dprintf("    player_main : ... MCI_STOP\r\n");
                 plr_stop(); //end playback
                 SuspendThread(player); //pause thread until next MCI_PLAY
             }
 
 			if (plr_pump() == 0) //done playing song
 			{
-				dprintf("    player_main : ... done playing song\r\n");
 				break;
 			}
 
 			if (updateTrack) //MCI_PLAY
 			{
-				dprintf("    player_main : ... MCI_PLAY\r\n");
 				break;
 			}
         }
 
         current++;
-		dprintf("  checking control signals looped, current is now : %d\r\n", current);
     }
-
-	dprintf("player_main : while !closed ended -> player stopped");
     plr_stop();
 
     playing = 0;
@@ -337,17 +330,18 @@ MCIERROR WINAPI fake_mciSendCommandA(MCIDEVICEID IDDevice, UINT uMsg, DWORD_PTR 
 
             if (fdwCommand & MCI_FROM)
             {
-				//Wipeout 2097 specifix fix
+				//Wipeout 2097 specific fix
 				if (parms->dwFrom == 0)
 				{
-					return 0;
+					parms->dwFrom = rand() % numTracks;
+					parms->dwTo = parms->dwFrom + 1;
 				}
-				else
+				else if(parms->dwFrom > (DWORD)numTracks)
 				{
 					parms->dwFrom = parms->dwFrom % numTracks;
 					parms->dwTo = parms->dwFrom + 1;
 				}
-				//end of Wipeout 2097 specifix fix
+				//end of Wipeout 2097 specific fix
 
                 dprintf("    dwFrom: %d\r\n", parms->dwFrom);
 
@@ -446,7 +440,7 @@ MCIERROR WINAPI fake_mciSendCommandA(MCIDEVICEID IDDevice, UINT uMsg, DWORD_PTR 
         if (uMsg == MCI_STOP)
         {
             dprintf("  MCI_STOP\r\n");
-            playing = 0;
+			playing = 0;
         }
 
         if (uMsg == MCI_STATUS)
