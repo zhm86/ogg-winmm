@@ -178,6 +178,8 @@ BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
                 dprintf("Track %02d: %02d:%02d @ %d seconds\r\n", i, tracks[i].length / 60, tracks[i].length % 60, tracks[i].position);
                 numTracks++;
                 lastTrack = i;
+				dprintf("firstTrack : %d\r\n", firstTrack);
+				dprintf("lastTrack : %d\r\n", lastTrack);
                 position += tracks[i].length;
             }
         }
@@ -330,101 +332,99 @@ MCIERROR WINAPI fake_mciSendCommandA(MCIDEVICEID IDDevice, UINT uMsg, DWORD_PTR 
 
             if (fdwCommand & MCI_FROM)
             {
-				//Wipeout 2097 specific fix
-				if (parms->dwFrom == 0)
+				//Wipeout 2097 fix
+				if (MCI_TMSF_TRACK(parms->dwFrom) == 0)
 				{
 					parms->dwFrom = rand() % numTracks;
 					parms->dwTo = parms->dwFrom + 1;
 				}
-				else if(parms->dwFrom > (DWORD)numTracks)
-				{
-					parms->dwFrom = parms->dwFrom % numTracks;
-					parms->dwTo = parms->dwFrom + 1;
-				}
-				//end of Wipeout 2097 specific fix
+				//end of Wipeout 2097 fix
 
                 dprintf("    dwFrom: %d\r\n", parms->dwFrom);
 
-                // FIXME: rounding to nearest track
-                if (time_format == MCI_FORMAT_TMSF)
-                {
-                    info.first = MCI_TMSF_TRACK(parms->dwFrom);
+				// FIXME: rounding to nearest track
+				if (time_format == MCI_FORMAT_TMSF)
+				{
+					info.first = MCI_TMSF_TRACK(parms->dwFrom);
 
-                    dprintf("      TRACK  %d\n", MCI_TMSF_TRACK(parms->dwFrom));
-                    dprintf("      MINUTE %d\n", MCI_TMSF_MINUTE(parms->dwFrom));
-                    dprintf("      SECOND %d\n", MCI_TMSF_SECOND(parms->dwFrom));
-                    dprintf("      FRAME  %d\n", MCI_TMSF_FRAME(parms->dwFrom));
-                }
-                else if (time_format == MCI_FORMAT_MILLISECONDS)
-                {
-                    info.first = 0;
+					dprintf("      TRACK  %d\n", MCI_TMSF_TRACK(parms->dwFrom));
+					dprintf("      MINUTE %d\n", MCI_TMSF_MINUTE(parms->dwFrom));
+					dprintf("      SECOND %d\n", MCI_TMSF_SECOND(parms->dwFrom));
+					dprintf("      FRAME  %d\n", MCI_TMSF_FRAME(parms->dwFrom));
+				}
+				else if (time_format == MCI_FORMAT_MILLISECONDS)
+				{
+					info.first = 0;
 
-                    for (int i = 0; i < MAX_TRACKS; i++)
-                    {
-                        // FIXME: take closest instead of absolute
-                        if (tracks[i].position == parms->dwFrom / 1000)
-                        {
-                            info.first = i;
-                        }
-                    }
+					for (int i = 0; i < MAX_TRACKS; i++)
+					{
+						// FIXME: take closest instead of absolute
+						if (tracks[i].position == parms->dwFrom / 1000)
+						{
+							info.first = i;
+						}
+					}
 
-                    dprintf("      mapped milliseconds to %d\n", info.first);
-                }
-                else
-                {
-                    // FIXME: not really
-                    info.first = parms->dwFrom;
-                }
+					dprintf("      mapped milliseconds to %d\n", info.first);
+				}
+				else
+				{
+					// FIXME: not really
+					info.first = parms->dwFrom;
+				}
 
-                if (info.first < firstTrack)
-                    info.first = firstTrack;
+				if (info.first < firstTrack)
+					info.first = firstTrack;
 
-                if (info.first > lastTrack)
-                    info.first = lastTrack;
+				if (info.first > lastTrack)
+					info.first = lastTrack;
 
-                info.last = info.first;
+				info.last = info.first + 1;
             }
 
             if (fdwCommand & MCI_TO)
             {
                 dprintf("    dwTo:   %d\r\n", parms->dwTo);
 
-                if (time_format == MCI_FORMAT_TMSF)
-                {
-                    info.last = MCI_TMSF_TRACK(parms->dwTo);
+				if (time_format == MCI_FORMAT_TMSF)
+				{
+					info.last = MCI_TMSF_TRACK(parms->dwTo);
 
-                    dprintf("      TRACK  %d\n", MCI_TMSF_TRACK(parms->dwTo));
-                    dprintf("      MINUTE %d\n", MCI_TMSF_MINUTE(parms->dwTo));
-                    dprintf("      SECOND %d\n", MCI_TMSF_SECOND(parms->dwTo));
-                    dprintf("      FRAME  %d\n", MCI_TMSF_FRAME(parms->dwTo));
-                }
-                else if (time_format == MCI_FORMAT_MILLISECONDS)
-                {
-                    info.last = info.first;
+					dprintf("      TRACK  %d\n", MCI_TMSF_TRACK(parms->dwTo));
+					dprintf("      MINUTE %d\n", MCI_TMSF_MINUTE(parms->dwTo));
+					dprintf("      SECOND %d\n", MCI_TMSF_SECOND(parms->dwTo));
+					dprintf("      FRAME  %d\n", MCI_TMSF_FRAME(parms->dwTo));
+				}
+				else if (time_format == MCI_FORMAT_MILLISECONDS)
+				{
+					info.last = info.first;
 
-                    for (int i = info.first; i < MAX_TRACKS; i++)
-                    {
-                        // FIXME: use better matching
-                        if (tracks[i].position + tracks[i].length > parms->dwFrom / 1000)
-                        {
-                            info.last = i;
-                            break;
-                        }
-                    }
+					for (int i = info.first; i < MAX_TRACKS; i++)
+					{
+						// FIXME: use better matching
+						if (tracks[i].position + tracks[i].length > parms->dwFrom / 1000)
+						{
+							info.last = i;
+							break;
+						}
+					}
 
-                    dprintf("      mapped milliseconds to %d\n", info.last);
-                }
-                else
-                    info.last = parms->dwTo;
+					dprintf("      mapped milliseconds to %d\n", info.last);
+				}
+				else
+					info.last = parms->dwTo;
 
-                if (info.last < info.first)
-                    info.last = info.first;
+				if (info.last < info.first)
+					info.last = info.first + 1;
 
-                if (info.last > lastTrack)
-                    info.last = lastTrack;
-            }
+				if (info.last > lastTrack)
+					info.last = lastTrack + 1;
+			}
 
-            if (info.first && (fdwCommand & MCI_FROM))
+			dprintf("      info.first : %d\r\n", info.first);
+			dprintf("      info.last : %d\r\n", info.last);
+
+            if (fdwCommand & MCI_FROM)
             {
                 updateTrack = 1;
                 playing = 1;
@@ -433,7 +433,7 @@ MCIERROR WINAPI fake_mciSendCommandA(MCIDEVICEID IDDevice, UINT uMsg, DWORD_PTR 
                 if (player == NULL)
                     player = CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)player_main, NULL, 0, NULL);
                 else
-                    ResumeThread(player);       
+                    ResumeThread(player);
             }
         }
 
@@ -538,9 +538,7 @@ MCIERROR WINAPI fake_mciSendCommandA(MCIDEVICEID IDDevice, UINT uMsg, DWORD_PTR 
             }
 
             dprintf("  dwReturn %d\n", parms->dwReturn);
-
         }
-
         return 0;
     }
 
