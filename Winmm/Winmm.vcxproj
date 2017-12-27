@@ -74,8 +74,8 @@
     <LinkIncremental>true</LinkIncremental>
     <IncludePath>$(VC_IncludePath);$(WindowsSDK_IncludePath);</IncludePath>
     <LibraryPath>$(SolutionDir)Win32\$(Configuration)\;$(LibraryPath)</LibraryPath>
-    <OutDir>C:\Jeux\ABWFR\Wipeout 2097\</OutDir>
-    <TargetName>WINM</TargetName>
+    <OutDir>$(SolutionDir)$(Configuration)\</OutDir>
+    <TargetName>$(ProjectName)</TargetName>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
