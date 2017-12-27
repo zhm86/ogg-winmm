@@ -23,6 +23,13 @@ Run Build -> Build Solution (or Ctrl-Shift-B).
 
 You need to have the Windows 8.1 SDK and headers installed for the build to succeed.
 
+SETUP:
+
+You need the x86 VS 2017 MSVC Runtime for this wrapper to run :
+https://go.microsoft.com/fwlink/?LinkId=746572
+OR
+https://www.visualstudio.com/fr/downloads/
+
 USAGE:
 
 Copy "winmm.dll" into the same folder as the executable of the game you want 
