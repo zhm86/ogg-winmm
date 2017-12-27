@@ -44,10 +44,6 @@ struct play_info
     int last;
 };
 
-#ifndef _DEBUG
-#define _DEBUG 1
-#endif
-
 #ifdef _DEBUG
 #define dprintf(...) if (fh) { fprintf(fh, __VA_ARGS__); fflush(NULL); }
 FILE *fh = NULL;
