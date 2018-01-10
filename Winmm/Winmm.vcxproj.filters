@@ -41,7 +41,7 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="Winmm.def">
-      <Filter>Header Files</Filter>
+      <Filter>Source Files</Filter>
     </None>
   </ItemGroup>
 </Project>
