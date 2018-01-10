@@ -12,9 +12,6 @@ but it's not as useful without the source available, so I fixed it myself as wel
 I (The Uploader) could not build it with MSYS, and I needed to fix a particular game
 (Wipeout 2097), so I took the sources and made it build with MSVC 14.1 through VS 2017.
 
-If you need this fork for another game, remove the specific Wipeout 2097 fix first
-in mciSendCommandA.
-
 BUILDING:
 
 Open winmmOgg.sln with Visual Studio 2015 or 2017.
@@ -25,9 +22,7 @@ You need to have the Windows 8.1 SDK and headers installed for the build to succ
 
 SETUP:
 
-You need the x86 VS 2017 MSVC Runtime for this wrapper to run :
-https://go.microsoft.com/fwlink/?LinkId=746572
-OR
+You need the *x86* 2017 MSVC Runtime for this wrapper to run :
 https://www.visualstudio.com/fr/downloads/
 
 USAGE:
