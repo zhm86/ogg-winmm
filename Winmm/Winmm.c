@@ -328,13 +328,13 @@ MCIERROR WINAPI fake_mciSendCommandA(MCIDEVICEID IDDevice, UINT uMsg, DWORD_PTR 
 
             if (fdwCommand & MCI_FROM)
             {
-				//Wipeout 2097 fix
+				//Wipeout 2097 (and similar cases) fix
 				if (MCI_TMSF_TRACK(parms->dwFrom) == 0)
 				{
 					parms->dwFrom = rand() % numTracks;
 					parms->dwTo = parms->dwFrom + 1;
 				}
-				//end of Wipeout 2097 fix
+				//end of Wipeout 2097 (and similar cases) fix
 
                 dprintf("    dwFrom: %d\r\n", parms->dwFrom);
 
