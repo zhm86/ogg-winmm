@@ -23,7 +23,9 @@ You need to have the Windows 8.1 SDK and headers installed for the build to succ
 SETUP:
 
 You need the *x86* 2017 MSVC Runtime for this wrapper to run :
-https://www.visualstudio.com/fr/downloads/
+https://www.visualstudio.com/en/downloads/
+OR
+https://support.microsoft.com/en-us/help/2977003/the-latest-supported-visual-c-downloads
 
 USAGE:
 
