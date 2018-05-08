@@ -415,6 +415,11 @@ MCIERROR WINAPI fake_mciSendCommandA(MCIDEVICEID IDDevice, UINT uMsg, DWORD_PTR 
 
 				if (info.last > lastTrack)
 					info.last = lastTrack + 1;
+
+				if (info.first == info.last)
+				{
+					info.last = info.first + 1;
+				}
 			}
 
 			dprintf("      info.first : %d\r\n", info.first);
