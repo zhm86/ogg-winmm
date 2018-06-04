@@ -81,18 +81,17 @@ int player_main()
             updateTrack = 0;
         }
 
-        //stop if at end of 'playlist'
+        //rewind if at end of 'playlist'
         //note "last" track is NON-inclusive
 		if (current == last)
 		{
-			playing = 0;
+			current = info.first;
+			playing = 1;
 		}
+
         //try to play song
-        else
-        {
-            dprintf("  Next track: %s\r\n", tracks[current].path);
-            playing = plr_play(tracks[current].path);
-        }
+        dprintf("  Next track: %s\r\n", tracks[current].path);
+        playing = plr_play(tracks[current].path);
 
         while (1)
         {
@@ -104,7 +103,6 @@ int player_main()
             
             if (!playing) //MCI_STOP
             {
-
                 plr_stop(); //end playback
                 SuspendThread(player); //pause thread until next MCI_PLAY
             }
