@@ -38,3 +38,7 @@ it starts with track02!
 
 Now, instead of playing music from the CD, the game will play music from these
 files instead.
+
+PROTIP :
+
+If the music doesn't play, it usually means that the wrapper isn't loaded. To fix that, rename it to something else, like "WINMX.DLL", and edit the game's executable with an hex editor to reflect this change.
