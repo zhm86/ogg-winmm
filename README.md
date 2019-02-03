@@ -9,7 +9,7 @@ It has gone unmaintained, so I (bangstk) took it upon myself to solve a couple i
 namely making it work on Windows 10. Good Old Games has fixed their own version,
 but it's not as useful without the source available, so I fixed it myself as well.
 
-I (The Uploader) could not build it with MSYS, and I needed to fix a particular game
+I (Maximilien Noal) could not build it with MSYS, and I needed to fix a particular game
 (Wipeout 2097), so I took the sources and made it build with MSVC 14.1 through VS 2017.
 
 BUILDING:
