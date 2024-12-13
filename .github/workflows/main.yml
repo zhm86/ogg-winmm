@@ -21,7 +21,7 @@ jobs:
     - name: Setup MSBuild and Visual Studio 2017
       uses: ilammy/msvc-dev-cmd@v1
       with:
-        arch: x64 # 根据您的需求选择架构，可以是x86或x64
+        arch: x86 # 根据您的需求选择架构，可以是x86或x64
         vs-version: '2017' # 确保使用的是Visual Studio 2017
 
     - name: Build solution
