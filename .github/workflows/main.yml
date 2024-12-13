@@ -8,7 +8,8 @@ on:
   pull_request:
     branches:
       - main # 当创建针对main分支的拉取请求时触发
-
+  workflow_dispatch:
+  
 jobs:
   build:
 
