@@ -1,0 +1,39 @@
+name: Build and Publish DLL with MSVC 14.1
+
+# 控制工作流何时运行
+on:
+  push:
+    branches:
+      - main # 当推送到main分支时触发
+  pull_request:
+    branches:
+      - main # 当创建针对main分支的拉取请求时触发
+
+jobs:
+  build:
+
+    runs-on: windows # 使用包含Visual Studio 2017的Windows Server 2019虚拟环境
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v3
+
+    - name: Setup MSBuild and Visual Studio 2017
+      uses: ilammy/msvc-dev-cmd@v1
+      with:
+        arch: x64 # 根据您的需求选择架构，可以是x86或x64
+        vs-version: '2017' # 确保使用的是Visual Studio 2017
+
+    - name: Build solution
+      run: |
+        msbuild /p:Configuration=Release /p:Platform=x86 WinmmOgg.sln # 替换为您的.sln文件名和目标平台
+
+    - name: Upload DLL as artifact
+      uses: actions/upload-artifact@v3
+      with:
+        name: dll-files
+        path: |
+          **/*.dll # 匹配所有.dll文件
+          !**/obj/**/*.dll # 排除obj目录下的所有.dll文件
+          !**/bin/**/*.dll # 排除bin目录下的所有.dll文件
+          **/bin/Release/x86/**/*.dll # 只包含Release配置下x64 bin目录中的.dll文件
